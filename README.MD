@@ -70,7 +70,7 @@
 *admin@admin.com*
 *admin*
 
-#### Моковые данные для тестирования.
+### Моковые данные для тестирования.
 ##### Создание моковых данных
 ```bash
    python manage.py generate_mock_data
