@@ -61,18 +61,22 @@ class CollectViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user)
 
     def get_queryset(self):
+        """
+        Создание кверисета для работы с групповыми сборами
+        """
         count_donaters = Count('payments__donater', distinct=True)
         payments = Prefetch(
             'payments',
             queryset=Payment.objects.all().select_related('donater')
         )
         amount_collected = Sum('payments__amount')
-        return Collect.objects.all().prefetch_related(
+        queryset = Collect.objects.all().prefetch_related(
             payments
         ).select_related('collect_type').annotate(
             count_donaters=count_donaters,
             amount_collected=amount_collected
         ).order_by('-id')
+        return queryset
 
     @COLLECT_SWAGGER['add_donate']
     @action(detail=True, methods=['post'])
