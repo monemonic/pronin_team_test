@@ -1,0 +1,72 @@
+version: '3'
+
+services:
+  db_local:
+    image: postgres:17
+    env_file: .env
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD', 'pg_isready', '-U', 'postgres']
+      interval: 2s
+      timeout: 2s
+      retries: 2
+    ports:
+      - '5434:5432'
+    command: ['postgres', '-c', 'jit=off']
+  
+  redis_local:
+    image: redis:7-alpine
+    restart: always
+
+  backend_local:
+    build:
+      context: .
+      dockerfile: docker/app_local/Dockerfile
+    env_file: .env
+    depends_on:
+      db_local:
+        condition: service_healthy
+    volumes:
+      - static:/static
+      - media:/app/media
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings
+
+  celery_worker:
+    build:
+      context: .
+      dockerfile: docker/app_local/Dockerfile
+    env_file: .env
+    depends_on:
+      - redis_local
+      - backend_local
+    command: celery --app=config.celery worker  --loglevel=info
+  
+  celery_beat:
+    build:
+      context: .
+      dockerfile: docker/app_local/Dockerfile
+    env_file: .env
+    depends_on:
+      - redis_local
+      - backend_local
+    command: celery --app=config.celery beat --loglevel=info
+
+  gateway_local:
+    build:
+      context: .
+      dockerfile: docker/nginx_local/Dockerfile
+    env_file: .env
+    depends_on: 
+      - backend_local
+    ports:
+      - '8000:80'
+    volumes:
+      - static:/static
+      - media:/media
+
+volumes:
+  pg-data:
+  static:
+  media:

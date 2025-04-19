@@ -1,0 +1,32 @@
+# Исключаем виртуальное окружение
+venv/
+.env
+*.env
+
+# Исключаем файлы кеша и временные файлы
+__pycache__/
+*.pyc
+*.pyo
+
+# Исключаем тестовые и дев-зависимости
+pytest.ini
+tests/
+*.log
+coverage.xml
+htmlcov/
+db.sqlite3
+
+# Исключаем артефакты сборки
+*.egg-info/
+dist/
+build/
+
+# Исключаем статические и медиа-файлы
+static/
+media/
+emails/
+
+# Исключаем IDE-файлы
+.vscode/
+.idea/
+*.iml
