@@ -1,7 +1,7 @@
 from drf_spectacular.utils import extend_schema
-from rest_framework import mixins, viewsets
 from rest_framework.permissions import AllowAny
 
+from api.mixins import CreateMixin
 from user_app.models import User
 from user_app.user_swagger import USER_SWAGGER
 
@@ -9,7 +9,7 @@ from .serializers import UserSerializer
 
 
 @extend_schema(tags=['Пользователь'],)
-class UsersViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
+class UsersViewSet(CreateMixin):
     """
     Этот ViewSet предоставляет метод для создания пользователей
     """
