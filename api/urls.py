@@ -2,7 +2,8 @@ from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from rest_framework.routers import DefaultRouter
 
-from api.collect.views import CollectTypeViewSet, CollectViewSet
+from api.collect.views import (CollectTypeViewSet, CollectViewSet,
+                               PaymentViewSet)
 from api.user.views import UsersViewSet
 
 app_name = 'api'
@@ -11,6 +12,7 @@ router = DefaultRouter()
 router.register('users', UsersViewSet, basename='users')
 router.register('collect_type', CollectTypeViewSet, basename='collect_type')
 router.register('collect', CollectViewSet, basename='collect')
+router.register('payment', PaymentViewSet, basename='payment')
 
 urlpatterns = [
     path('auth/', include('djoser.urls.jwt')),
