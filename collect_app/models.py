@@ -1,3 +1,4 @@
+from django.core.validators import MinValueValidator
 from django.db import models
 
 from user_app.models import User
@@ -43,11 +44,15 @@ class Collect(models.Model):
         verbose_name='Описание',
         max_length=COLLECT_CONSTANTS['COLLECT_DESCRIPTION_MAX_LENGTH'],
     )
-    collect_target = models.PositiveBigIntegerField(
+    collect_target = models.DecimalField(
         verbose_name='Планируемая сумма сбора',
+        max_digits=20,
+        decimal_places=0,
         null=True,
         blank=True,
-        default=0
+        validators=[MinValueValidator(
+            COLLECT_CONSTANTS['MIN_COLLECT_TARGET_VALUE']
+        )],
     )
     image = models.ImageField(
         verbose_name='Обложка сбора',
@@ -59,6 +64,10 @@ class Collect(models.Model):
     collection_end_date = models.DateTimeField(
         verbose_name='Дата окончания сбора',
         validators=[check_date_end_collect]
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Дата создания сбора'
     )
 
     class Meta:
@@ -82,8 +91,13 @@ class Payment(models.Model):
         on_delete=models.CASCADE,
         verbose_name='Жертвователь',
     )
-    amount = models.PositiveBigIntegerField(
-        verbose_name='Сумма пожертвования'
+    amount = models.DecimalField(
+        verbose_name='Сумма пожертвования',
+        max_digits=20,
+        decimal_places=0,
+        validators=[MinValueValidator(
+            COLLECT_CONSTANTS['MIN_DONATE_VALUE']
+        )]
     )
     collect = models.ForeignKey(
         Collect,

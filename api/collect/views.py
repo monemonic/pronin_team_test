@@ -1,16 +1,18 @@
+from django.core.cache import cache
 from django.db.models import Count, Prefetch, Sum
-from django.shortcuts import get_object_or_404
+
 from drf_spectacular.utils import extend_schema
-from rest_framework import status, viewsets
-from rest_framework.decorators import action
+from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from api.mixins import ListMixin
+from api.mixins import CreateMixin, ListMixin
 from api.permissions import IsAuthorOrReadOnly
+from collect_app.collect_swaggers import (COLLECT_SWAGGER,
+                                          COLLETCT_TYPE_SWAGGER,
+                                          PAYMENT_SWAGGER)
 from collect_app.constants import COLLECT_CONSTANTS
 from collect_app.models import Collect, CollectType, Payment
-from collect_app.collect_swaggers import COLLECT_SWAGGER, COLLETCT_TYPE_SWAGGER
 from utils_app.services import BaseService
 
 from .paginations import CollectListPageNumberPagination
@@ -23,13 +25,19 @@ class CollectTypeViewSet(ListMixin):
     queryset = CollectType.objects.all()
     serializer_class = CollectTypeSerializer
 
-    @BaseService.cache_response_decorator(
-        COLLECT_CONSTANTS['CACHE_COLLECT_TYPE_LIST'],
-        COLLECT_CONSTANTS['CACHE_COLLECT_TYPE_LIST_lIFE_TIME']
-    )
     @COLLETCT_TYPE_SWAGGER['list']
     def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
+        cached_data = cache.get(COLLECT_CONSTANTS['CACHE_COLLECT_TYPE_LIST'])
+        if cached_data is None:
+            response = super().list(request, *args, **kwargs)
+            cache.set(
+                COLLECT_CONSTANTS['CACHE_COLLECT_TYPE_LIST'],
+                response.data,
+                timeout=COLLECT_CONSTANTS['CACHE_COLLECT_TYPE_LIST_lIFE_TIME']
+            )
+            return response
+
+        return Response(cached_data)
 
 
 @extend_schema(tags=['Сборы'])
@@ -41,14 +49,12 @@ class CollectViewSet(viewsets.ModelViewSet):
         match self.action:
             case 'create' | 'partial_update':
                 return CollectSerializer
-            case 'add_donate':
-                return PaymentSerializer
             case _:
                 return ReadCollectSerializer
 
     def get_permissions(self):
         match self.action:
-            case 'add_donate' | 'create':
+            case 'create':
                 return (IsAuthenticated(),)
             case _:
                 return (IsAuthorOrReadOnly(),)
@@ -75,21 +81,8 @@ class CollectViewSet(viewsets.ModelViewSet):
         ).select_related('collect_type').annotate(
             count_donaters=count_donaters,
             amount_collected=amount_collected
-        ).order_by('-id')
+        ).order_by('-created_at')
         return queryset
-
-    @COLLECT_SWAGGER['add_donate']
-    @action(detail=True, methods=['post'])
-    def add_donate(self, request, pk):
-        """
-        Создание нового пожертвования для указанного сбора
-        """
-        collect = get_object_or_404(Collect, pk=pk)
-        self.check_object_permissions(request, collect)
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save(collect=collect, donater=self.request.user)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @COLLECT_SWAGGER['create']
     def create(self, request, *args, **kwargs):
@@ -103,9 +96,8 @@ class CollectViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         return super().destroy(request, *args, **kwargs)
 
-    def _generate_cache_key_list_collects(self, request, *args, **kwargs):
-        """Метод создания ключа кеша для списка сборов"""
-
+    @COLLECT_SWAGGER['list']
+    def list(self, request, *args, **kwargs):
         # Параметры запроса для создания ключа кеша
         page_num = request.query_params.get('page', '1')
         page_size = request.query_params.get('page_size', '')
@@ -117,35 +109,49 @@ class CollectViewSet(viewsets.ModelViewSet):
         cached_key = COLLECT_CONSTANTS['CACHE_COLLECTS_LIST'].format(
             params=generate_key
         )
-        return cached_key
 
-    @BaseService.cache_response_decorator(
-        _generate_cache_key_list_collects,
-        COLLECT_CONSTANTS['CACHE_COLLECTS_LIST_LIFE_TIME']
-    )
-    @COLLECT_SWAGGER['list']
-    def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
+        cached_data = cache.get(cached_key)
 
-    def _generate_cache_key_retrieve_collect(self, request, *args, **kwargs):
-        """Метод создания ключа кеша для списка сборов"""
+        if cached_data is None:
+            response = super().list(request, *args, **kwargs)
+            cache.set(
+                cached_key, response.data,
+                timeout=COLLECT_CONSTANTS['CACHE_COLLECTS_LIST_LIFE_TIME']
+            )
+            return response
 
-        # Получение ID сбора для генерации ключа
-        collect_id = self.kwargs['pk']
+        return Response(cached_data)
 
-        # Генерация ключа кеша
-        key = f'{collect_id}'
-        generate_key = BaseService.generate_cache_key(key)
+    @COLLECT_SWAGGER['retrieve']
+    def retrieve(self, request, *args, **kwargs):
+
+        generate_key = BaseService.generate_cache_key(self.kwargs['pk'])
 
         cached_key = COLLECT_CONSTANTS['CACHE_RETRIEVE_COLLECT'].format(
             collect_id=generate_key
         )
-        return cached_key
+        cached_data = cache.get(cached_key)
+        if cached_data is None:
+            response = super().retrieve(request, *args, **kwargs)
+            cache.set(
+                cached_key,
+                response.data,
+                timeout=COLLECT_CONSTANTS['CACHE_RETRIEVE_COLLECT_LIFE_TIME']
+            )
+            return response
 
-    @BaseService.cache_response_decorator(
-        _generate_cache_key_retrieve_collect,
-        COLLECT_CONSTANTS['CACHE_RETRIEVE_COLLECT_LIFE_TIME']
-    )
-    @COLLECT_SWAGGER['retrieve']
-    def retrieve(self, request, *args, **kwargs):
-        return super().retrieve(request, *args, **kwargs)
+        return Response(cached_data)
+
+
+@extend_schema(tags=['Пожертвования'])
+class PaymentViewSet(CreateMixin):
+    queryset = Payment.objects.all()
+    serializer_class = PaymentSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def perform_create(self, serializer):
+        serializer.save(donater=self.request.user)
+
+    @PAYMENT_SWAGGER['create']
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)

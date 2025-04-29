@@ -5,10 +5,12 @@ from config import settings as settings_django
 
 
 @shared_task
-def send_email_notification(user, message):
+def send_email_notification(user_id, message):
     """
     Celery задача для отправления письма пользователю с уведомлением
     """
+    from user_app.models import User
+    user = User.objects.get(pk=user_id)
     to = [user.email]
 
     send_mail(

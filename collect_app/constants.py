@@ -15,5 +15,7 @@ COLLECT_CONSTANTS = {
     ),
     'SEND_EMAIL_WITH_CREATED_NEW_DONATE': (
         'Пожертвование в сбор {name} на сумму {amount} успешно отправлено'
-    )
+    ),
+    'MIN_COLLECT_TARGET_VALUE': 1,
+    'MIN_DONATE_VALUE': 1
 }

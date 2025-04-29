@@ -32,7 +32,7 @@ class PaymentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Payment
-        fields = ('id', 'donater', 'amount', 'created_at')
+        fields = ('id', 'donater', 'collect', 'amount', 'created_at')
 
 
 class ReadCollectSerializer(CollectSerializer):

@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.core.cache import cache
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
@@ -56,11 +57,16 @@ def send_email_create_new_collect(sender, created, instance, **kwargs):
             message = COLLECT_CONSTANTS[
                 'SEND_EMAIL_WITH_CREATED_NEW_COLLECT'
             ].format(name=instance.name)
-            user = instance.author
+            user_id = instance.author.id
         else:
             message = COLLECT_CONSTANTS[
                 'SEND_EMAIL_WITH_CREATED_NEW_DONATE'
             ].format(name=instance.collect.name, amount=instance.amount)
-            user = instance.donater
+            user_id = instance.donater.id
 
-        send_email_notification(user, message)
+        task = (
+            send_email_notification
+            if settings.LOCAL
+            else send_email_notification.delay
+        )
+        task(user_id, message)

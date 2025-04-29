@@ -72,50 +72,16 @@ BASE_COLLECT_VALIDATE_ERROR = [
         ]}
     ),
     OpenApiExample(
-        'В поле collect_target указана отрицательная сумма',
-        value={'collect_target': [
-            (
-                'Убедитесь, что это значение больше либо равно 0.'
-            )
-        ]}
+        'В collect_target передается не число',
+        value={'collect_target': ['Требуется численное значение.']}
     ),
     OpenApiExample(
-        'В поле collect_target указаны невалидные данные',
-        value={'collect_target': [
-            (
-                'Введите правильное число.'
-            )
-        ]}
+        'В collect_target передается число меньше 1',
+        value={'collect_target': ['Убедитесь, что это значение больше либо равно 1.']}
     ),
 ]
 
 COLLECT_SWAGGER = {
-    'add_donate': extend_schema(
-        summary='Создание нового пожертвования',
-        description=(
-            'Создание нового пожертвования. Доступно '
-            'только для авторизованного пользователя'
-        ),
-        responses={
-            201: PaymentSerializer,
-            401: NOT_AUTH_USER,
-            400: OpenApiResponse(
-                response=OpenApiTypes.OBJECT,
-                description='Ошибка валидации данных',
-                examples=[
-                    OpenApiExample(
-                        'Не указано поле amount',
-                        value={'amount': ['Обязательное поле.']}
-                    ),
-                    OpenApiExample(
-                        'В поле amount указано невалидное значение',
-                        value={'amount': ['Введите правильное число.']}
-                    ),
-                ]
-            ),
-            404: OBJECT_NOT_FOUND
-        }
-    ),
     'create': extend_schema(
         summary='Создание нового сбора',
         description=(
@@ -187,4 +153,45 @@ COLLECT_SWAGGER = {
             404: OBJECT_NOT_FOUND
         }
     )
+}
+
+
+PAYMENT_SWAGGER = {
+    'create': extend_schema(
+        summary='Создание нового пожертвования',
+        description=(
+            'Создание нового пожертвования. Доступно '
+            'только для авторизованного пользователя'
+        ),
+        responses={
+            201: PaymentSerializer,
+            401: NOT_AUTH_USER,
+            400: OpenApiResponse(
+                response=OpenApiTypes.OBJECT,
+                description='Ошибка валидации данных',
+                examples=[
+                    OpenApiExample(
+                        'Не указано поле amount',
+                        value={'amount': ['Обязательное поле.']}
+                    ),
+                    OpenApiExample(
+                        'В поле amount указано невалидное значение',
+                        value={'amount': ['Введите правильное число.']}
+                    ),
+                    OpenApiExample(
+                        'Не указано поле collect',
+                        value={'collect': ['Обязательное поле.']}
+                    ),
+                    OpenApiExample(
+                        'В поле collect указано невалидное значение',
+                        value={'collect': ['Некорректный тип. Ожидалось значение первичного ключа, получен str.']}
+                    ),
+                    OpenApiExample(
+                        'В поле collect указано значение несуществующего сбора',
+                        value={'collect': ['Недопустимый первичный ключ \"500000\" - объект не существует.']}
+                    ),
+                ]
+            ),
+        }
+    ),
 }
