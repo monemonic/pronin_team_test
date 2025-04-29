@@ -141,9 +141,12 @@ class Test02Collect:
     @pytest.mark.parametrize(
         'data', invalid_collect_data
     )
-    def test_invalid_data_user_create_collect(self, data, user_client):
+    def test_invalid_data_user_create_collect(
+        self, data, user_client, collect_type
+    ):
         """Проверка создания сбора с неверными данными."""
         collect_count = Collect.objects.count()
+        data['collect_type'] = collect_type.id
         response = user_client.post(self.URL_LIST_AND_CREATE, data=data)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert collect_count == Collect.objects.count()

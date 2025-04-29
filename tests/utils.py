@@ -151,81 +151,58 @@ invalid_collect_data = [
     (
         {
             'name': 'A' * (COLLECT_CONSTANTS['COLLECT_NAME_MAX_LENGTH'] + 1),
-            'collect_type': 1,
             'description': 'Описание нормальной длины',
             'collect_target': 10000,
-            'collection_end_date': '2025-12-31 23:59:59',
+            'collection_end_date': '2026-04-29T15:00:31',
         }
     ),
     (
         {
             'name': 'Нормальное название',
-            'collect_type': 1,
             'description': 'B' * (
                 COLLECT_CONSTANTS['COLLECT_DESCRIPTION_MAX_LENGTH'] + 1
             ),
             'collect_target': 10000,
-            'collection_end_date': '2025-12-31 23:59:59',
+            'collection_end_date': '2026-04-29T15:00:31',
         }
     ),
     (
         {
             'name': 'Нормальное название',
-            'collect_type': 1,
             'description': 'Описание нормальной длины',
-            'collect_target': COLLECT_CONSTANTS['MIN_COLLECT_TARGET_VALUE'] - 1,
-            'collection_end_date': '2025-12-31 23:59:59',
+            'collect_target': (
+                COLLECT_CONSTANTS['MIN_COLLECT_TARGET_VALUE'] - 1
+            ),
+            'collection_end_date': '22026-04-29T15:00:31',
         }
     ),
     (
         {
             'name': 'Нормальное название',
-            'collect_type': 1,
-            'description': 'Описание нормальной длины',
-            'collect_target': 10000,
-            'collection_end_date': '2020-01-01 00:00:00',
-        }
-    ),
-    (
-        {
-            'name': 'Нормальное название',
-            'collect_type': '',
             'description': 'Описание нормальной длины',
             'collect_target': 10000,
-            'collection_end_date': '2025-12-31 23:59:59',
+            'collection_end_date': '2020-04-29T15:00:31',
         }
     ),
     (
         {
             'name': '',
-            'collect_type': 1,
             'description': 'Описание нормальной длины',
             'collect_target': 10000,
-            'collection_end_date': '2025-12-31 23:59:59',
+            'collection_end_date': '2026-04-29T15:00:31',
         }
     ),
     (
         {
             'name': 'Нормальное название',
-            'collect_type': 1,
             'description': '',
             'collect_target': 10000,
-            'collection_end_date': '2025-12-31 23:59:59',
+            'collection_end_date': '2026-04-29T15:00:31',
         }
     ),
     (
         {
             'name': 'Нормальное название',
-            'collect_type': 1,
-            'description': 'Описание нормальной длины',
-            'collect_target': '',
-            'collection_end_date': '2025-12-31 23:59:59',
-        }
-    ),
-    (
-        {
-            'name': 'Нормальное название',
-            'collect_type': 1,
             'description': 'Описание нормальной длины',
             'collect_target': 10000,
             'collection_end_date': '',
